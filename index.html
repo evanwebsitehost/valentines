@@ -3,1032 +3,467 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evan's data analysis website</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Merry Christmas! 🎄</title>
     <style>
-        /* Apply Inter font and a light background to the body for light mode */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Tailwind gray-100 */
-            color: #1f2937; /* Tailwind gray-800 for default text */
-        }
-        /* Headings */
-        h1 { font-weight: 800; color: #1d4ed8; } /* Darker blue for main title */
-        h2 { font-weight: 700; color: #1f2937; } /* Dark gray for section titles */
-        h3 { font-weight: 600; color: #374151; } /* Slightly lighter gray for card titles */
-
-        /* Custom styling for chart containers to ensure responsiveness and aspect ratio */
-        .chart-container {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(180deg, #a8daff 0%, #c9e6ff 50%, #e0f2ff 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
             position: relative;
-            margin: auto;
-            padding-bottom: 75%; /* This makes the container's height 75% of its width */
-            height: 0; /* Reset height as padding controls it */
-            width: 100%; /* Full width for responsiveness */
-            max-width: 500px; /* Max width for larger screens to prevent charts from getting too wide */
-        }
-        /* Ensure the canvas fills its responsive container */
-        .chart-container canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100% !important;
-            height: 100% !important;
         }
 
-        /* Styling for the table container with custom scrollbar */
-        .table-container {
-            max-height: 300px; /* Limit height to enable scrolling */
-            overflow-y: auto; /* Enable vertical scrolling */
-            border-radius: 0.75rem; /* Rounded corners for consistency */
-            border: 1px solid #e5e7eb; /* Subtle border for tables */
-        }
-        /* Custom scrollbar for webkit browsers (Chrome, Safari) */
-        .table-container::-webkit-scrollbar {
-            width: 8px; /* Width of the scrollbar */
-        }
-        .table-container::-webkit-scrollbar-track {
-            background: #f1f1f1; /* Light track background */
-            border-radius: 10px; /* Rounded corners for the track */
-        }
-        .table-container::-webkit-scrollbar-thumb {
-            background: #a0aec0; /* Lighter thumb color */
-            border-radius: 10px; /* Rounded corners for the thumb */
-        }
-        .table-container::-webkit-scrollbar-thumb:hover {
-            background: #718096; /* Darker thumb on hover */
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: white;
+            font-size: 1em;
+            user-select: none;
+            z-index: 1000;
+            pointer-events: none;
+            animation: fall linear infinite;
         }
 
-        /* Base button styles - expanded from Tailwind classes */
-        .btn {
-            padding: 0.75rem 1.5rem; /* Increased padding */
-            background-color: #2563eb; /* bg-blue-600 */
-            color: #fff; /* text-white */
-            font-weight: 600; /* font-semibold */
-            border-radius: 0.5rem; /* rounded-lg */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
-            transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform; /* transition */
-            transition-duration: 150ms; /* duration-150 */
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); /* ease-in-out */
-            outline: 2px solid transparent; /* focus:outline-none */
-            outline-offset: 2px; /* focus:outline-none */
-            border: 1px solid #1d4ed8; /* Subtle border */
-        }
-        .btn:hover {
-            background-color: #1e40af; /* hover:bg-blue-800 */
-        }
-        .btn:focus {
-            --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-            --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
-            box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000); /* focus:ring-2 */
-            --tw-ring-color: rgba(59, 130, 246, 0.75); /* focus:ring-blue-500 focus:ring-opacity-75 */
-        }
-
-        /* Secondary button styles - expanded from Tailwind classes */
-        .btn-secondary {
-            padding: 0.75rem 1.5rem; /* Increased padding */
-            background-color: #e5e7eb; /* bg-gray-200 */
-            color: #374151; /* text-gray-700 */
-            font-weight: 600; /* font-semibold */
-            border-radius: 0.5rem; /* rounded-lg */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
-            transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform; /* transition */
-            transition-duration: 150ms; /* duration-150 */
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); /* ease-in-out */
-            outline: 2px solid transparent; /* focus:outline-none */
-            outline-offset: 2px; /* focus:outline-none */
-            border: 1px solid #d1d5db; /* Subtle border */
-        }
-        .btn-secondary:hover {
-            background-color: #d1d5db; /* hover:bg-gray-300 */
-        }
-        .btn-secondary:focus {
-            --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-            --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
-            box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000); /* focus:ring-2 */
-            --tw-ring-color: rgba(156, 163, 175, 0.75); /* focus:ring-gray-400 focus:ring-opacity-75 */
-        }
-
-        /* Card styling - expanded from Tailwind classes for light mode */
-        .card {
-            background-color: #fff; /* bg-white */
-            color: #1f2937; /* text-gray-800 */
-            padding: 1.5rem; /* Increased padding */
-            border-radius: 0.75rem; /* rounded-xl */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Smooth transition for hover effect */
-            border: 1px solid #e5e7eb; /* Subtle border */
-        }
-        .card:hover {
-            transform: translateY(-3px); /* Slightly lift card on hover */
-            box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.15), 0 6px 10px -3px rgba(0, 0, 0, 0.08); /* Enhanced shadow on hover */
-        }
-        /* Responsive padding for cards */
-        @media (min-width: 640px) { /* sm breakpoint */
-            .card {
-                padding: 2rem; /* sm:p-8 */
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
             }
         }
 
-        /* Modal overlay styles */
-        .modal {
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            color: #ff4757;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3),
+                         0 0 20px rgba(255, 255, 255, 0.5);
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 3px 3px 6px rgba(0,0,0,0.3), 0 0 20px rgba(255, 255, 255, 0.5); }
+            50% { text-shadow: 3px 3px 6px rgba(0,0,0,0.3), 0 0 40px rgba(255, 71, 87, 0.8); }
+        }
+
+        .header p {
+            font-size: 1.4em;
+            color: #ffeaa7;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .tree-container {
+            text-align: center;
+            margin: 40px 0;
+            animation: fadeIn 1.5s ease-out;
+        }
+
+        .tree {
+            font-size: 3em;
+            display: inline-block;
+            animation: sway 3s ease-in-out infinite;
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(2deg); }
+            75% { transform: rotate(-2deg); }
+        }
+
+        .gifts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+
+        .gift-box {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #ffb6c1;
+        }
+
+        .gift-box:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(255, 182, 193, 0.5);
+        }
+
+        .gift-box.opened {
+            background: #fff5f8;
+            border-color: #b8e6ff;
+        }
+
+        .gift-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .gift-box.opened .gift-icon {
+            animation: spin 0.6s ease-out;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg) scale(1); }
+            to { transform: rotate(360deg) scale(1.2); }
+        }
+
+        .gift-title {
+            font-size: 1.3em;
+            color: #ff69b4;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(255,182,193,0.3);
+        }
+
+        .gift-message {
+            font-size: 1.1em;
+            color: #666;
+            line-height: 1.6;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+
+        .gift-box.opened .gift-message {
+            opacity: 1;
+            max-height: 500px;
+            margin-top: 15px;
+        }
+
+        .click-hint {
+            font-size: 0.9em;
+            color: #ff69b4;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .gift-box.opened .click-hint {
+            display: none;
+        }
+
+        .santa-container {
+            text-align: center;
+            margin: 50px 0;
+            font-size: 4em;
+            animation: slideIn 2s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100vw); }
+            to { transform: translateX(0); }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px;
+            color: #5599dd;
+            font-size: 1.2em;
+            animation: fadeIn 2s ease-out 1s both;
+        }
+
+        .cute-character {
+            font-size: 3em;
+            display: inline-block;
+            margin: 0 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .cute-character:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .character-container {
+            text-align: center;
+            margin: 40px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .cinnamoroll {
+            font-size: 4em;
+            animation: float 2.5s ease-in-out infinite;
+        }
+
+        .miffy {
+            font-size: 4em;
+            animation: float 3s ease-in-out infinite;
+            animation-delay: 0.7s;
+        }
+
+        .lights {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5); /* Darker overlay */
-            overflow-y: auto;
-            height: 100%;
             width: 100%;
+            height: 30px;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-        }
-        /* Modal content styles for light mode */
-        .modal-content {
-            background-color: #fff; /* Light background for modal */
-            color: #1f2937; /* Dark text for modal */
-            padding: 2rem; /* Increased padding */
-            border-radius: 0.5rem; /* rounded-lg */
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-xl */
-            width: 91.666667%; /* w-11/12 */
-            max-width: 28rem; /* max-w-md */
-            border: 1px solid #d1d5db; /* Subtle border */
+            justify-content: space-around;
+            z-index: 999;
+            pointer-events: none;
         }
 
-        /* Specific text color adjustments for light mode */
-        .text-gray-800 { color: #1f2937; } /* General text that was gray-800 */
-        .text-gray-600 { color: #4b5563; } /* General text that was gray-600 */
-        .text-gray-700 { color: #374151; } /* General text that was gray-700 */
-        .text-gray-500 { color: #6b7280; } /* General text that was gray-500 */
-        .bg-gray-50 { background-color: #f9fafb; } /* Table header background */
-        .bg-white { background-color: #fff; } /* Table body background */
-        .file\:bg-blue-50 { background-color: #eff6ff; } /* Light blue for file input background */
-        .file\:text-blue-700 { color: #1d4ed8; } /* Dark blue for file input text */
-        .hover\:file\:bg-blue-100:hover { background-color: #e0e7ff; } /* Lighter blue on hover for file input */
-
-        /* Select element styling for light mode */
-        select {
-            background-color: #fff; /* Light background for select */
-            color: #1f2937; /* Dark text for select */
-            border-color: #d1d5db; /* Lighter border */
-            padding: 0.5rem 0.75rem; /* Added padding */
-            border-radius: 0.375rem; /* Slightly rounded */
-        }
-        select:focus {
-            border-color: #2563eb; /* Highlight color on focus */
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); /* Blue glow on focus */
+        .light {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
         }
 
-        /* Table specific styles for light mode */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #e5e7eb; /* Lighter borders for table cells */
-            padding: 0.75rem; /* Increased padding */
-            text-align: left;
-        }
-        th {
-            cursor: pointer; /* Indicate sortable headers */
-            user-select: none; /* Prevent text selection on click */
-            transition: background-color 0.15s ease-in-out;
-        }
-        th:hover {
-            background-color: #f9fafb; /* Slightly lighter on hover */
-        }
-        tbody tr:nth-child(even) {
-            background-color: #f9fafb; /* Alternate row background */
-        }
-        tbody tr:hover {
-            background-color: #eef2ff; /* Highlight row on hover */
+        .light:nth-child(1) { background: #ff6b6b; animation-delay: 0s; }
+        .light:nth-child(2) { background: #4ecdc4; animation-delay: 0.3s; }
+        .light:nth-child(3) { background: #ffd93d; animation-delay: 0.6s; }
+        .light:nth-child(4) { background: #95e1d3; animation-delay: 0.9s; }
+        .light:nth-child(5) { background: #ff6b6b; animation-delay: 1.2s; }
+        .light:nth-child(6) { background: #4ecdc4; animation-delay: 0.2s; }
+        .light:nth-child(7) { background: #ffd93d; animation-delay: 0.5s; }
+        .light:nth-child(8) { background: #95e1d3; animation-delay: 0.8s; }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; box-shadow: 0 0 20px currentColor; }
+            50% { opacity: 0.3; box-shadow: none; }
         }
 
-        /* Socials styling */
-        .social-links a {
-            display: inline-block;
-            margin: 0 0.5rem;
-            font-size: 1.5rem; /* Adjust icon size */
-            color: #1d4ed8; /* Blue color for icons */
-            transition: transform 0.2s ease-in-out;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-        .social-links a:hover {
-            transform: scale(1.1); /* Slightly enlarge icons on hover */
-            color: #2563eb; /* Darker blue on hover */
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2.5em; }
+            .header p { font-size: 1.1em; }
+            .gifts-container { grid-template-columns: 1fr; }
         }
     </style>
 </head>
-<body class="min-h-screen p-4 sm:p-6">
-    <div class="container mx-auto max-w-6xl">
-        <header class="mb-8 sm:mb-12 text-center">
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-blue-700">Evan's data analysis website</h1>
-            <p class="text-lg text-gray-600 mt-2">Upload, Visualize, Analyze, and Export Your Data.</p>
-        </header>
-
-        <section id="data-ingestion" class="card mb-8">
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">1. Upload Your Data</h2>
-            <div class="flex flex-col sm:flex-row items-center space-y-5 sm:space-y-0 sm:space-x-6">
-                <input type="file" id="csvFile" accept=".csv" class="block w-full text-base text-gray-500
-                    file:mr-5 file:py-3 file:px-6
-                    file:rounded-lg file:border-0
-                    file:text-base file:font-semibold
-                    file:bg-blue-50 file:text-blue-700
-                    hover:file:bg-blue-100 transition duration-150 ease-in-out cursor-pointer">
-                <button id="processDataBtn" class="btn w-full sm:w-auto text-lg">Process Data</button>
-            </div>
-            <p id="fileError" class="text-red-500 text-sm mt-3 hidden"></p>
-        </section>
-
-        <section id="data-preview" class="card mb-8 hidden">
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">2. Data Preview & Selection</h2>
-            <div id="tableContainer" class="table-container mb-6">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead id="tableHeader" class="bg-gray-50">
-                        </thead>
-                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
-                        </tbody>
-                </table>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                    <label for="columnSelectX" class="block text-base font-medium text-gray-700 mb-2">X-axis (Category/Label):</label>
-                    <select id="columnSelectX" class="form-select block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></select>
-                </div>
-                <div>
-                    <label for="columnSelectY" class="block text-base font-medium text-gray-700 mb-2">Y-axis (Value/Numeric):</label>
-                    <select id="columnSelectY" class="form-select block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></select>
-                </div>
-            </div>
-            <button id="generateChartsBtn" class="btn w-full sm:w-auto text-lg">Generate Charts & Statistics</button>
-        </section>
-
-        <section id="descriptive-statistics" class="card mb-8 hidden">
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">3. Descriptive Statistics</h2>
-            <div id="statsOutput" class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <p class="text-gray-500">Select a numeric Y-axis column and click "Generate Charts & Statistics" to see descriptive statistics here.</p>
-            </div>
-        </section>
-
-        <section id="data-filtering" class="card mb-8 hidden">
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">4. Filter Data</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <div>
-                    <label for="filterColumnSelect" class="block text-base font-medium text-gray-700 mb-2">Filter Column:</label>
-                    <select id="filterColumnSelect" class="form-select block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></select>
-                </div>
-                <div>
-                    <label for="filterValueInput" class="block text-base font-medium text-gray-700 mb-2">Filter Value:</label>
-                    <input type="text" id="filterValueInput" placeholder="Enter value to match" class="block w-full rounded-md border-gray-300 shadow-sm bg-white text-gray-800 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
-                </div>
-                <button id="applyFilterBtn" class="btn-secondary w-full text-lg md:mt-auto">Apply Filter</button>
-            </div>
-            <button id="clearFilterBtn" class="btn-secondary w-full text-lg mt-4">Clear Filter</button>
-        </section>
-
-        <section id="visualization-dashboard" class="mb-8 hidden">
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">5. Visualization Dashboard</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="card">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">Bar Chart</h3>
-                    <div class="chart-container"><canvas id="barChart"></canvas></div>
-                </div>
-                <div class="card">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">Line Chart</h3>
-                    <div class="chart-container"><canvas id="lineChart"></canvas></div>
-                </div>
-                <div class="card">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">Pie Chart</h3>
-                    <div class="chart-container"><canvas id="pieChart"></canvas></div>
-                </div>
-            </div>
-        </section>
-
-        <section id="export-data" class="card mb-8 hidden">
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">6. Export Data</h2>
-            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
-                <button id="exportCsvBtn" class="btn-secondary w-full sm:w-auto text-lg">Export as CSV</button>
-                <button id="exportPdfBtn" class="btn-secondary w-full sm:w-auto text-lg">Export as PDF</button>
-                <button id="exportExcelBtn" class="btn-secondary w-full sm:w-auto text-lg">Export as Excel</button>
-            </div>
-        </section>
-
-        <footer class="mt-12 text-center text-base text-gray-500">
-            <p>&copy; 2025 Evan's data analysis website. All rights reserved.</p>
-            <div class="social-links mt-4 flex justify-center items-center space-x-4">
-                <a href="https://evannoshy.github.io" target="_blank" rel="noopener noreferrer" aria-label="Evan's Website">🌐</a>
-                <a href="https://github.com/Evannoshy" target="_blank" rel="noopener noreferrer" aria-label="GitHub">👨‍💻</a>
-                <a href="mailto:evantan005@gmail.com" aria-label="Email">✉️</a>
-                <a href="https://l.instagram.com/?u=https%3A%2F%2Fwww.linkedin.com%2Fin%2Fevan-tan-3b0b59323%3Futm_source%3Dshare%26utm_campaign%3Dshare_via%26utm_content%3Dprofile%26utm_medium%3Dios_app%26fbclid%3DPAZXh0bgNhZW0CMTEAAaf3t8_VrmjcASaDNK_sK3NIFawnSUTRmduxjN_wR5LhGCIzoDgWT54RNE_LqA_aem_W9ppUI8XK-e8OftrE1tGnQ&amp;e=AT30hyroYy1X5D6-VLW7iw7hlHpdyUhT4IGzNNkafUDt4GD_SdurPdGK4wuTdocmBoeDM6gQm6HU5s_0bw-o2oArRYNH8_gfETzpjpoE70vpJ7SJy8yYp2k" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">💼</a>
-            </div>
-        </footer>
+<body>
+    <div class="lights">
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
     </div>
 
-    <div id="messageModal" class="modal hidden">
-        <div class="modal-content text-center">
-            <p id="modalMessage" class="text-xl font-semibold mb-6"></p>
-            <button id="closeModalBtn" class="btn text-lg">Close</button>
+    <div class="container">
+        <div class="header">
+            <h1>🎄 Merry Christmas! 🎄</h1>
+            <p>✨ Wishing you joy, love, and magic this holiday season! ✨</p>
+        </div>
+
+        <div class="character-container">
+            <div class="cinnamoroll">☁️🐰☁️🐰☁️</div>
+            <div class="miffy">🐱☁️🐱☁️🐱</div>
+        </div>
+
+        <div class="tree-container">
+            <div class="tree">
+                🌟<br>
+                🎄<br>
+                🎁🎁🎁
+            </div>
+        </div>
+
+        <div class="gifts-container">
+            <div class="gift-box" onclick="openGift(this)">
+                <div class="gift-icon">🎁</div>
+                <div class="gift-title">Gift of Joy ☁️</div>
+                <div class="click-hint">Click to open!</div>
+                <div class="gift-message">
+                    Hi Daz! May your days be filled with laughter, your heart with warmth, and your home with love. Here's to making wonderful memories :] There's no greater joy than getting to know you!
+                </div>
+            </div>
+
+            <div class="gift-box" onclick="openGift(this)">
+                <div class="gift-icon">🎀</div>
+                <div class="gift-title">Gift of Peace 🐰</div>
+                <div class="click-hint">Click to open!</div>
+                <div class="gift-message">
+                    In this busy season, take a moment to breathe, relax, and enjoy the simple pleasures. You deserve all the happiness :] 🐱🐱🐱
+                </div>
+            </div>
+
+            <div class="gift-box" onclick="openGift(this)">
+                <div class="gift-icon">🎅</div>
+                <div class="gift-title">Gift of Magic ☁️</div>
+                <div class="click-hint">Click to open!</div>
+                <div class="gift-message">
+                    Believe in the magic of Christmas! May miracles find you, dreams come true, and wonder fill every corner of your world! 🐱🐱🐱
+                </div>
+            </div>
+
+            <div class="gift-box" onclick="openGift(this)">
+                <div class="gift-icon">⛄</div>
+                <div class="gift-title">Gift of Hope 🐰</div>
+                <div class="click-hint">Click to open!</div>
+                <div class="gift-message">
+                    As we welcome a new year, may hope light your path, courage fuel your journey, and endless possibilities await you! 🐱🐱🐱
+                </div>
+            </div>
+
+            <div class="gift-box" onclick="openGift(this)">
+                <div class="gift-icon">🍪</div>
+                <div class="gift-title">Gift of Sweetness ☁️</div>
+                <div class="click-hint">Click to open!</div>
+                <div class="gift-message">
+                    Meiji Chocolates, Cabuary abd Milo are all really sweet, but no where as sweet as you are :]
+                </div>
+            </div>
+        </div>
+
+        <div class="santa-container">
+            ☁️ 🎅🦌🦌🦌🛷 ☁️
+        </div>
+
+        <div class="footer">
+            <p>🌟 Have yourself a merry little Christmas! 🌟</p>
+            <p>From Cinnamoroll, Miffy, and us ❤️</p>
         </div>
     </div>
 
     <script>
-        // Global variables to store parsed data and chart instances
-        let originalParsedData = null; // Stores the original data parsed from the CSV file
-        let currentDisplayedData = null; // Stores the data currently displayed (can be filtered)
-        let headers = [];      // Stores the column headers of the CSV
-        let chartInstances = { // Object to hold references to Chart.js instances for easy destruction
-            bar: null,
-            line: null,
-            pie: null
-        };
-        let currentSortColumn = null;
-        let currentSortDirection = 'asc'; // 'asc' or 'desc'
-
-        // --- DOM Element References ---
-        const csvFileInput = document.getElementById('csvFile');
-        const processDataBtn = document.getElementById('processDataBtn');
-        const generateChartsBtn = document.getElementById('generateChartsBtn');
-        const exportCsvBtn = document.getElementById('exportCsvBtn');
-        const exportPdfBtn = document.getElementById('exportPdfBtn');
-        const exportExcelBtn = document.getElementById('exportExcelBtn');
-        
-        const dataPreviewSection = document.getElementById('data-preview');
-        const visualizationDashboardSection = document.getElementById('visualization-dashboard');
-        const exportDataSection = document.getElementById('export-data');
-        const descriptiveStatisticsSection = document.getElementById('descriptive-statistics');
-        const dataFilteringSection = document.getElementById('data-filtering');
-
-        const tableHeader = document.getElementById('tableHeader');
-        const tableBody = document.getElementById('tableBody');
-        const columnSelectX = document.getElementById('columnSelectX');
-        const columnSelectY = document.getElementById('columnSelectY');
-        const fileError = document.getElementById('fileError');
-        const statsOutput = document.getElementById('statsOutput');
-        const filterColumnSelect = document.getElementById('filterColumnSelect');
-        const filterValueInput = document.getElementById('filterValueInput');
-        const applyFilterBtn = document.getElementById('applyFilterBtn');
-        const clearFilterBtn = document.getElementById('clearFilterBtn');
-
-        const messageModal = document.getElementById('messageModal');
-        const modalMessage = document.getElementById('modalMessage');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-
-        // --- Utility Functions ---
-
-        /**
-         * Displays a modal message to the user.
-         * @param {string} message - The message to display in the modal.
-         */
-        function showModal(message) {
-            modalMessage.textContent = message;
-            messageModal.classList.remove('hidden'); // Show the modal
-        }
-
-        /**
-         * Hides the modal message.
-         */
-        function hideModal() {
-            messageModal.classList.add('hidden'); // Hide the modal
-        }
-
-        // Event listener for closing the modal
-        closeModalBtn.addEventListener('click', hideModal);
-
-        // --- Event Listeners ---
-
-        // Event listener for the "Process Data" button
-        processDataBtn.addEventListener('click', () => {
-            const file = csvFileInput.files[0]; // Get the selected file
-            if (file) {
-                fileError.classList.add('hidden'); // Hide any previous file error
-                Papa.parse(file, {
-                    header: true,         // Treat the first row as headers
-                    skipEmptyLines: true, // Ignore empty rows
-                    dynamicTyping: true,  // Automatically convert numbers and booleans
-                    complete: function(results) {
-                        if (results.errors.length > 0) {
-                            console.error("Parsing errors:", results.errors);
-                            showModal("Error parsing CSV file. Some rows might be problematic. Check console for details.");
-                            fileError.textContent = "Error parsing CSV. Some rows might be problematic.";
-                            fileError.classList.remove('hidden');
-                            if (results.data && results.data.length > 0) {
-                                originalParsedData = results.data;
-                                currentDisplayedData = [...originalParsedData]; // Initialize current data
-                                headers = results.meta.fields;
-                                displayDataPreview();
-                                populateColumnSelectors();
-                                populateFilterColumnSelect(); // Populate filter column select
-                            } else {
-                                originalParsedData = null;
-                                currentDisplayedData = null;
-                                headers = [];
-                            }
-                            return;
-                        }
-
-                        originalParsedData = results.data;
-                        currentDisplayedData = [...originalParsedData]; // Initialize current data
-                        headers = results.meta.fields;
-                        
-                        if (!originalParsedData || originalParsedData.length === 0) {
-                            showModal("CSV file is empty or could not be parsed correctly.");
-                            return;
-                        }
-                        if (!headers || headers.length === 0) {
-                            showModal("Could not extract headers from CSV. Please ensure the CSV has a header row.");
-                            return;
-                        }
-
-                        displayDataPreview();      // Show the parsed data in a table
-                        populateColumnSelectors(); // Populate dropdowns with column headers
-                        populateFilterColumnSelect(); // Populate filter column select
-                        
-                        // Show relevant sections
-                        dataPreviewSection.classList.remove('hidden');
-                        exportDataSection.classList.remove('hidden');
-                        descriptiveStatisticsSection.classList.remove('hidden'); // Show stats section
-                        dataFilteringSection.classList.remove('hidden'); // Show filter section
-
-                        // Hide charts initially until columns are selected and "Generate Charts" is clicked
-                        visualizationDashboardSection.classList.add('hidden'); 
-                        showModal("Data processed successfully! Preview available below. Select columns for charts.");
-                    },
-                    error: function(error) {
-                        console.error("PapaParse error:", error);
-                        showModal("Failed to parse CSV file: " + error.message);
-                        fileError.textContent = "Failed to parse CSV: " + error.message;
-                        fileError.classList.remove('hidden');
-                        originalParsedData = null;
-                        currentDisplayedData = null;
-                        headers = [];
-                    }
-                });
-            } else {
-                showModal("Please select a CSV file first.");
-                fileError.textContent = "No file selected.";
-                fileError.classList.remove('hidden');
-            }
-        });
-
-        // Event listener for the "Generate Charts & Statistics" button
-        generateChartsBtn.addEventListener('click', () => {
-            if (!currentDisplayedData) {
-                showModal("No data processed yet. Please upload and process a CSV file.");
-                return;
-            }
-            const xColumn = columnSelectX.value;
-            const yColumn = columnSelectY.value;
-
-            if (!xColumn || !yColumn) {
-                showModal("Please select columns for both X and Y axes.");
-                return;
-            }
-            if (xColumn === yColumn) {
-                showModal("X and Y axis columns cannot be the same for meaningful charts.");
-                return;
-            }
-
-            const isYNumeric = currentDisplayedData.every(row => {
-                const value = row[yColumn];
-                return typeof value === 'number' || (typeof value === 'string' && !isNaN(parseFloat(value)) && value.trim() !== '');
-            });
-
-            if (!isYNumeric) {
-                showModal(`Warning: The selected Y-axis column ('${yColumn}') contains non-numeric values. Charts might not render as expected or may be inaccurate.`);
-            }
-
-            createCharts(xColumn, yColumn); // Generate the charts
-            calculateDescriptiveStatistics(yColumn); // Calculate and display statistics
-            visualizationDashboardSection.classList.remove('hidden'); // Show the charts dashboard
-        });
-
-        // Event listener for the "Export as CSV" button
-        exportCsvBtn.addEventListener('click', () => {
-            if (currentDisplayedData) {
-                const csv = Papa.unparse(currentDisplayedData);
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement("a");
-                if (link.download !== undefined) {
-                    const url = URL.createObjectURL(blob);
-                    link.setAttribute("href", url);
-                    link.setAttribute("download", "exported_data.csv");
-                    link.style.visibility = 'hidden';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                } else {
-                    showModal("CSV export is not fully supported in your browser.");
+        function openGift(giftBox) {
+            if (!giftBox.classList.contains('opened')) {
+                giftBox.classList.add('opened');
+                
+                // Create celebration particles
+                for (let i = 0; i < 20; i++) {
+                    createParticle(giftBox);
                 }
-            } else {
-                showModal("No data to export. Please process a CSV file first.");
+                
+                // Play a cheerful sound effect (visual feedback)
+                giftBox.style.animation = 'none';
+                setTimeout(() => {
+                    giftBox.style.animation = '';
+                }, 10);
             }
-        });
-
-        // Event listener for the "Export as PDF" button
-        exportPdfBtn.addEventListener('click', exportPdf);
-
-        // Event listener for the "Export as Excel" button
-        exportExcelBtn.addEventListener('click', exportExcel);
-
-        // Event listener for the "Apply Filter" button
-        applyFilterBtn.addEventListener('click', applyFilter);
-
-        // Event listener for the "Clear Filter" button
-        clearFilterBtn.addEventListener('click', clearFilter);
-
-
-        // --- Data Display and Charting Functions ---
-
-        /**
-         * Displays a preview of the parsed CSV data in an HTML table.
-         * Shows up to the first 100 rows for performance.
-         */
-        function displayDataPreview() {
-            tableHeader.innerHTML = '';
-            tableBody.innerHTML = '';
-
-            if (!headers || headers.length === 0 || !currentDisplayedData) return;
-
-            // Populate table header row with sort functionality
-            const headerRow = document.createElement('tr');
-            headers.forEach(headerText => {
-                const th = document.createElement('th');
-                th.scope = "col";
-                th.className = "px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer";
-                th.textContent = headerText;
-                th.addEventListener('click', () => sortTable(headerText)); // Add sort listener
-                headerRow.appendChild(th);
-            });
-            tableHeader.appendChild(headerRow);
-
-            // Populate table body with a preview (max 100 rows)
-            const previewData = currentDisplayedData.slice(0, 100);
-            previewData.forEach(row => {
-                const tr = document.createElement('tr');
-                headers.forEach(header => {
-                    const td = document.createElement('td');
-                    td.className = "px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-500";
-                    td.textContent = row[header] !== null && row[header] !== undefined ? row[header] : '';
-                    tr.appendChild(td);
-                });
-                tableBody.appendChild(tr);
-            });
         }
 
-        /**
-         * Populates the X and Y axis column selection dropdowns.
-         */
-        function populateColumnSelectors() {
-            columnSelectX.innerHTML = '<option value="">Select X column</option>';
-            columnSelectY.innerHTML = '<option value="">Select Y column</option>';
+        function createParticle(element) {
+            const particle = document.createElement('div');
+            const rect = element.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
             
-            if (!headers || headers.length === 0) return;
-
-            headers.forEach(header => {
-                const optionX = document.createElement('option');
-                optionX.value = header;
-                optionX.textContent = header;
-                columnSelectX.appendChild(optionX);
-
-                const optionY = document.createElement('option');
-                optionY.value = header;
-                optionY.textContent = header;
-                columnSelectY.appendChild(optionY);
-            });
-        }
-
-        /**
-         * Populates the filter column selection dropdown.
-         */
-        function populateFilterColumnSelect() {
-            filterColumnSelect.innerHTML = '<option value="">Select column to filter</option>';
-            if (!headers || headers.length === 0) return;
-            headers.forEach(header => {
-                const option = document.createElement('option');
-                option.value = header;
-                option.textContent = header;
-                filterColumnSelect.appendChild(option);
-            });
-        }
-        
-        /**
-         * Destroys a Chart.js instance if it exists to prevent memory leaks and conflicts.
-         * @param {Chart} chartInstance - The Chart.js instance to destroy.
-         */
-        function destroyChart(chartInstance) {
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-        }
-
-        /**
-         * Generates and displays Bar, Line, and Pie charts based on selected X and Y columns.
-         * @param {string} xColumn - The header of the column to use for the X-axis (labels).
-         * @param {string} yColumn - The header of the column to use for the Y-axis (values).
-         */
-        function createCharts(xColumn, yColumn) {
-            const labels = currentDisplayedData.map(row => row[xColumn]);
-            const dataValues = currentDisplayedData.map(row => parseFloat(row[yColumn])).filter(val => !isNaN(val));
-
-            if (dataValues.length === 0) {
-                showModal(`No valid numeric data found in column '${yColumn}' for charting.`);
-                return;
-            }
+            particle.style.position = 'fixed';
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            particle.style.width = '10px';
+            particle.style.height = '10px';
+            particle.style.borderRadius = '50%';
+            particle.style.backgroundColor = ['#ff6b6b', '#4ecdc4', '#ffd93d', '#95e1d3'][Math.floor(Math.random() * 4)];
+            particle.style.pointerEvents = 'none';
+            particle.style.zIndex = '9999';
             
-            const uniqueLabels = [...new Set(labels)];
-            const aggregatedData = uniqueLabels.map(label => {
-                return currentDisplayedData
-                    .filter(row => row[xColumn] === label)
-                    .reduce((sum, row) => sum + (parseFloat(row[yColumn]) || 0), 0);
-            });
-
-            destroyChart(chartInstances.bar);
-            destroyChart(chartInstances.line);
-            destroyChart(chartInstances.pie);
-
-            const backgroundColors = [
-                'rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)', 'rgba(255, 206, 86, 0.6)',
-                'rgba(75, 192, 192, 0.6)', 'rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)',
-                'rgba(199, 199, 199, 0.6)', 'rgba(83, 102, 255, 0.6)', 'rgba(40, 159, 64, 0.6)',
-                'rgba(210, 99, 132, 0.6)', 'rgba(128, 0, 128, 0.6)', 'rgba(0, 128, 128, 0.6)' 
-            ];
-            const borderColors = backgroundColors.map(color => color.replace('0.6', '1'));
-
-            const chartOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: '#4b5563' // Dark text for legends
-                        }
-                    },
-                    tooltip: {
-                        titleColor: '#1f2937',
-                        bodyColor: '#374151',
-                        backgroundColor: '#f9fafb',
-                        borderColor: '#e5e7eb',
-                        borderWidth: 1
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: yColumn,
-                            color: '#374151'
-                        },
-                        ticks: {
-                            color: '#4b5563'
-                        },
-                        grid: {
-                            color: '#e5e7eb'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: xColumn,
-                            color: '#374151'
-                        },
-                        ticks: {
-                            color: '#4b5563'
-                        },
-                        grid: {
-                            color: '#e5e7eb'
-                        }
-                    }
+            document.body.appendChild(particle);
+            
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 100 + Math.random() * 100;
+            const vx = Math.cos(angle) * velocity;
+            const vy = Math.sin(angle) * velocity;
+            
+            let posX = 0;
+            let posY = 0;
+            let opacity = 1;
+            
+            const animate = () => {
+                posX += vx * 0.016;
+                posY += vy * 0.016 + 200 * 0.016;
+                opacity -= 0.02;
+                
+                particle.style.transform = `translate(${posX}px, ${posY}px)`;
+                particle.style.opacity = opacity;
+                
+                if (opacity > 0) {
+                    requestAnimationFrame(animate);
+                } else {
+                    particle.remove();
                 }
             };
-
-            // Bar Chart
-            const barCtx = document.getElementById('barChart').getContext('2d');
-            chartInstances.bar = new Chart(barCtx, {
-                type: 'bar',
-                data: {
-                    labels: uniqueLabels,
-                    datasets: [{
-                        label: `${yColumn} by ${xColumn}`,
-                        data: aggregatedData,
-                        backgroundColor: backgroundColors,
-                        borderColor: borderColors,
-                        borderWidth: 1
-                    }]
-                },
-                options: chartOptions
-            });
-
-            // Line Chart
-            const lineCtx = document.getElementById('lineChart').getContext('2d');
-            chartInstances.line = new Chart(lineCtx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: `${yColumn} over ${xColumn}`,
-                        data: currentDisplayedData.map(row => parseFloat(row[yColumn])),
-                        fill: false,
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
-                    }]
-                },
-                options: chartOptions
-            });
-
-            // Pie Chart
-            const pieCtx = document.getElementById('pieChart').getContext('2d');
-            chartInstances.pie = new Chart(pieCtx, {
-                type: 'pie',
-                data: {
-                    labels: uniqueLabels,
-                    datasets: [{
-                        label: yColumn,
-                        data: aggregatedData,
-                        backgroundColor: backgroundColors,
-                        borderColor: borderColors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                color: '#4b5563'
-                            }
-                        },
-                        tooltip: {
-                            titleColor: '#1f2937',
-                            bodyColor: '#374151',
-                            backgroundColor: '#f9fafb',
-                            borderColor: '#e5e7eb',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed !== null) {
-                                        label += new Intl.NumberFormat('en-US', { style: 'decimal' }).format(context.parsed);
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // --- Data Analysis Functions ---
-
-        /**
-         * Calculates and displays descriptive statistics for a given numeric column.
-         * @param {string} column - The column name for which to calculate statistics.
-         */
-        function calculateDescriptiveStatistics(column) {
-            const numericValues = currentDisplayedData
-                .map(row => parseFloat(row[column]))
-                .filter(val => !isNaN(val));
-
-            if (numericValues.length === 0) {
-                statsOutput.innerHTML = `<p class="text-red-500">No numeric data found in column '${column}' for statistics.</p>`;
-                return;
-            }
-
-            // Mean
-            const sum = numericValues.reduce((a, b) => a + b, 0);
-            const mean = sum / numericValues.length;
-
-            // Median
-            const sortedValues = [...numericValues].sort((a, b) => a - b);
-            const mid = Math.floor(sortedValues.length / 2);
-            const median = sortedValues.length % 2 === 0 ?
-                (sortedValues[mid - 1] + sortedValues[mid]) / 2 :
-                sortedValues[mid];
-
-            // Mode (can be multiple)
-            const frequencyMap = {};
-            numericValues.forEach(val => {
-                frequencyMap[val] = (frequencyMap[val] || 0) + 1;
-            });
-            let maxFreq = 0;
-            let modes = [];
-            for (const key in frequencyMap) {
-                if (frequencyMap[key] > maxFreq) {
-                    maxFreq = frequencyMap[key];
-                    modes = [parseFloat(key)];
-                } else if (frequencyMap[key] === maxFreq) {
-                    modes.push(parseFloat(key));
-                }
-            }
-
-            // Min and Max
-            const min = Math.min(...numericValues);
-            const max = Math.max(...numericValues); // Corrected from Math.Max
-
-            // Standard Deviation (sample standard deviation)
-            const variance = numericValues.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (numericValues.length - 1);
-            const standardDeviation = Math.sqrt(variance);
-
-            statsOutput.innerHTML = `
-                <h3 class="text-xl font-semibold text-gray-700 mb-4">Statistics for '${column}'</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
-                    <p><strong>Count:</strong> ${numericValues.length}</p>
-                    <p><strong>Mean:</strong> ${mean.toFixed(2)}</p>
-                    <p><strong>Median:</strong> ${median.toFixed(2)}</p>
-                    <p><strong>Mode(s):</strong> ${modes.join(', ')}</p>
-                    <p><strong>Min:</strong> ${min.toFixed(2)}</p>
-                    <p><strong>Max:</strong> ${max.toFixed(2)}</p>
-                    <p><strong>Std Dev:</strong> ${standardDeviation.toFixed(2)}</p>
-                </div>
-            `;
-        }
-
-        /**
-         * Applies a filter to the data based on a selected column and value.
-         * Updates `currentDisplayedData` and refreshes the table and charts.
-         */
-        function applyFilter() {
-            const filterColumn = filterColumnSelect.value;
-            const filterValue = filterValueInput.value.trim();
-
-            if (!filterColumn || !filterValue) {
-                showModal("Please select a column and enter a value to filter by.");
-                return;
-            }
-
-            // Filter the original data
-            currentDisplayedData = originalParsedData.filter(row => {
-                const cellValue = String(row[filterColumn]).toLowerCase();
-                return cellValue.includes(filterValue.toLowerCase());
-            });
-
-            if (currentDisplayedData.length === 0) {
-                showModal(`No data found matching '${filterValue}' in column '${filterColumn}'. Displaying original data.`);
-                currentDisplayedData = [...originalParsedData]; // Revert to original if no matches
-            } else {
-                showModal(`Data filtered successfully! Showing ${currentDisplayedData.length} matching rows.`);
-            }
             
-            displayDataPreview(); // Refresh table
-            // Re-generate charts and stats if columns are already selected
-            if (columnSelectX.value && columnSelectY.value) {
-                createCharts(columnSelectX.value, columnSelectY.value);
-                calculateDescriptiveStatistics(columnSelectY.value);
-            }
+            animate();
         }
 
-        /**
-         * Clears any active filters and reverts `currentDisplayedData` to the original dataset.
-         */
-        function clearFilter() {
-            currentDisplayedData = [...originalParsedData];
-            filterColumnSelect.value = "";
-            filterValueInput.value = "";
-            showModal("Filter cleared. Displaying all original data.");
-            displayDataPreview(); // Refresh table
-            // Re-generate charts and stats if columns are already selected
-            if (columnSelectX.value && columnSelectY.value) {
-                createCharts(columnSelectX.value, columnSelectY.value);
-                calculateDescriptiveStatistics(columnSelectY.value);
-            }
+        // Create snowflakes
+        function createSnowflake() {
+            const snowflake = document.createElement('div');
+            snowflake.classList.add('snowflake');
+            snowflake.innerHTML = ['❄', '❅', '❆'][Math.floor(Math.random() * 3)];
+            snowflake.style.left = Math.random() * 100 + '%';
+            snowflake.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            snowflake.style.opacity = Math.random();
+            snowflake.style.fontSize = (Math.random() * 10 + 10) + 'px';
+            
+            document.body.appendChild(snowflake);
+            
+            setTimeout(() => {
+                snowflake.remove();
+            }, 5000);
         }
 
-        /**
-         * Sorts the data table by the given column. Toggles between ascending and descending.
-         * @param {string} column - The column name to sort by.
-         */
-        function sortTable(column) {
-            if (currentSortColumn === column) {
-                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                currentSortColumn = column;
-                currentSortDirection = 'asc';
-            }
+        // Generate snowflakes continuously
+        setInterval(createSnowflake, 200);
 
-            currentDisplayedData.sort((a, b) => {
-                const valA = a[column];
-                const valB = b[column];
-
-                // Handle numbers
-                if (typeof valA === 'number' && typeof valB === 'number') {
-                    return currentSortDirection === 'asc' ? valA - valB : valB - valA;
-                }
-                // Handle strings (case-insensitive)
-                if (typeof valA === 'string' && typeof valB === 'string') {
-                    const strA = String(valA).toLowerCase();
-                    const strB = String(valB).toLowerCase();
-                    if (strA < strB) return currentSortDirection === 'asc' ? -1 : 1;
-                    if (strA > strB) return currentSortDirection === 'asc' ? 1 : -1;
-                    return 0;
-                }
-                // Fallback for mixed types or other cases
-                if (valA === null || valA === undefined) return currentSortDirection === 'asc' ? 1 : -1;
-                if (valB === null || valB === undefined) return currentSortDirection === 'asc' ? -1 : 1;
-                
-                // For other types, convert to string and compare
-                const strA = String(valA).toLowerCase();
-                const strB = String(valB).toLowerCase();
-                if (strA < strB) return currentSortDirection === 'asc' ? -1 : 1;
-                if (strA > strB) return currentSortDirection === 'asc' ? 1 : -1;
-                return 0;
-            });
-
-            displayDataPreview(); // Re-render the sorted table
-            // Re-generate charts and stats if columns are already selected
-            if (columnSelectX.value && columnSelectY.value) {
-                createCharts(columnSelectX.value, columnSelectY.value);
-                calculateDescriptiveStatistics(columnSelectY.value);
-            }
-        }
-
-
-        // --- Export Functions ---
-
-        /**
-         * Exports the entire page content as a PDF.
-         * Uses html2canvas to capture the body and jsPDF to create the PDF.
-         */
-        async function exportPdf() {
-            if (!currentDisplayedData) {
-                showModal("No data processed yet. Please upload and process a CSV file before exporting to PDF.");
-                return;
-            }
-
-            showModal("Generating PDF... This may take a moment.");
-            const { jsPDF } = window.jspdf; // Destructure jsPDF from the global window object
-
-            try {
-                // Capture the entire body content
-                const canvas = await html2canvas(document.body, {
-                    scale: 2, // Increase scale for better resolution
-                    useCORS: true, // Enable CORS if loading external resources (e.g., fonts)
-                    backgroundColor: '#f3f4f6' // Ensure PDF background matches light mode
-                });
-
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('p', 'mm', 'a4'); // Portrait, millimeters, A4 size
-                const imgWidth = 210; // A4 width in mm
-                const pageHeight = 297; // A4 height in mm
-                const imgHeight = canvas.height * imgWidth / canvas.width;
-                let heightLeft = imgHeight;
-                let position = 0;
-
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-
-                while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                }
-
-                pdf.save('data_analysis_report.pdf');
-                showModal("PDF exported successfully!");
-            } catch (error) {
-                console.error("Error generating PDF:", error);
-                showModal("Failed to generate PDF. Please try again or check console for details.");
-            }
-        }
-
-        /**
-         * Exports the parsed data as an Excel (.xlsx) file.
-         * Uses SheetJS (xlsx library).
-         */
-        function exportExcel() {
-            if (!currentDisplayedData || currentDisplayedData.length === 0) {
-                showModal("No data to export. Please process a CSV file first.");
-                return;
-            }
-
-            try {
-                // Create a new workbook
-                const wb = XLSX.utils.book_new();
-                // Convert the parsed data (array of objects) to a worksheet
-                const ws = XLSX.utils.json_to_sheet(currentDisplayedData);
-                // Add the worksheet to the workbook
-                XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-                // Write the workbook to an .xlsx file
-                XLSX.writeFile(wb, "exported_data.xlsx");
-                showModal("Data exported as Excel successfully!");
-            } catch (error) {
-                console.error("Error exporting to Excel:", error);
-                showModal("Failed to export to Excel. Please try again or check console for details.");
-            }
+        // Initial snowflakes
+        for (let i = 0; i < 20; i++) {
+            setTimeout(createSnowflake, i * 100);
         }
     </script>
+    <img src="Cinnamoroll2Bbackground.webp" alt="Merry Christmas" class="image-placeholder" />
+    <img src="Cinnamoroll.webp" alt="Merry Christmas" class="image-placeholder" />
+    <img src="Cinnamoroll2Bbackground.webp" alt="Merry Christmas" class="image-placeholder" />
 </body>
 </html>
